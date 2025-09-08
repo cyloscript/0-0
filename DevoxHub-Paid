@@ -1,1 +1,214 @@
-1
+-- Load Rayfield
+local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
+local TweenService = game:GetService("TweenService")
+
+-- Services
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+local player = Players.LocalPlayer
+local camera = workspace.CurrentCamera
+
+-- Window Config
+local WindowConfig = {
+    Name = "DevoxHUB",
+    Icon = 93973861464448,
+    LoadingTitle = "DevoxHUB MS SCRIPT",
+    LoadingSubtitle = "by Cylo",
+    ShowText = "Rayfield",
+    Theme = "Light",
+    ToggleUIKeybind = "K",
+    DisableRayfieldPrompts = true,
+    DisableBuildWarnings = true,
+    ConfigurationSaving = { Enabled = true, FolderName = nil, FileName = "Big Hub" },
+    Discord = { Enabled = true, Invite = "cEgVBaHcrz", RememberJoins = true },
+    KeySystem = true,
+    KeySettings = { Title = "Devox Key", Subtitle = "Key System", Note = "KEY IN DISCORD", FileName = "DevoxKey", SaveKey = true, GrabKeyFromSite = false, Key = {"DEVOXHUB123"} }
+}
+
+-- Startup Sound
+do
+    local sound = Instance.new("Sound")
+    sound.SoundId = "rbxassetid://95080503984633"
+    sound.Volume = 1
+    sound.Parent = workspace
+    sound:Play()
+end
+
+-- Create main window
+local Window = Rayfield:CreateWindow(WindowConfig)
+
+-- =========================================================
+-- Paid Tab (First)
+-- =========================================================
+local PaidTab = Window:CreateTab("Paid", 6034509999)
+
+PaidTab:CreateButton({
+    Name="DEVOX HUB PAID",
+    Callback=function()
+        print("Button 1 clicked")
+    end
+})
+
+PaidTab:CreateButton({
+    Name="THANKS FOR USING DEVOX",
+    Callback=function()
+        print("Button 2 clicked")
+    end
+})
+
+-- =========================================================
+-- Player Tab
+-- =========================================================
+local PlayerTab = Window:CreateTab("Player", 4483362458)
+
+-- Walk Speed
+local WalkSpeedSlider = PlayerTab:CreateSlider({
+    Name="Walk Speed",
+    Range={16,200},
+    Increment=1,
+    Suffix="Speed",
+    CurrentValue=16,
+    Flag="WalkSpeed_Slider",
+    Callback=function(value)
+        if player.Character and player.Character:FindFirstChild("Humanoid") then
+            player.Character.Humanoid.WalkSpeed = value
+        end
+    end
+})
+
+-- Infinite Jump
+local InfJumpEnabled = false
+local InfJumpToggle = PlayerTab:CreateToggle({
+    Name="Infinite Jump",
+    CurrentValue=false,
+    Flag="InfJump_Toggle",
+    Callback=function(value) InfJumpEnabled = value end
+})
+UserInputService.JumpRequest:Connect(function()
+    if InfJumpEnabled and player.Character and player.Character:FindFirstChild("Humanoid") then
+        player.Character.Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+    end
+end)
+
+-- FOV
+local FOVSlider = PlayerTab:CreateSlider({
+    Name="Field of View (FOV)",
+    Range={70,120},
+    Increment=1,
+    Suffix="°",
+    CurrentValue=70,
+    Flag="FOV_Slider",
+    Callback=function(value) camera.FieldOfView = value end
+})
+
+-- Dash
+local DashDistance = 10
+local DashSlider = PlayerTab:CreateSlider({
+    Name="Dash Distance",
+    Range={1,20},
+    Increment=1,
+    Suffix="studs",
+    CurrentValue=DashDistance,
+    Flag="DashSlider",
+    Callback=function(value) DashDistance = value end
+})
+local DashButton = PlayerTab:CreateButton({
+    Name="Dash",
+    Callback=function()
+        if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+            local hrp = player.Character.HumanoidRootPart
+            local lookDir = hrp.CFrame.LookVector
+            hrp.CFrame = hrp.CFrame + (lookDir * DashDistance)
+        end
+    end
+})
+
+-- =========================================================
+-- Magnets + ESP Tab
+-- =========================================================
+local MagnetTab = Window:CreateTab("Magnets + ESP", 6034509999)
+local magsEnabled, espEnabled = false, false
+local debounce = false
+local magConnection, espConnection
+local espBalls = {}
+local MAG_ESP_RADIUS = 9
+
+local MagESPRadiusSlider = MagnetTab:CreateSlider({
+    Name="MAGS + ESP Radius",
+    Range={1,20},
+    Increment=1,
+    Suffix="studs",
+    CurrentValue=MAG_ESP_RADIUS,
+    Flag="MagESPRadiusSlider",
+    Callback=function(value) MAG_ESP_RADIUS = value end
+})
+
+local MagESPToggleSwitch = MagnetTab:CreateToggle({
+    Name="Enable MAGS + ESP",
+    CurrentValue=false,
+    Flag="MagESPToggle",
+    Callback=function(value)
+        magsEnabled = value
+        espEnabled = value
+        -- MAGS
+        if magsEnabled then
+            magConnection = RunService.Heartbeat:Connect(function()
+                local hrp = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
+                if not hrp then return end
+                local region = Region3.new(hrp.Position - Vector3.new(MAG_ESP_RADIUS,MAG_ESP_RADIUS,MAG_ESP_RADIUS),
+                                           hrp.Position + Vector3.new(MAG_ESP_RADIUS,MAG_ESP_RADIUS,MAG_ESP_RADIUS))
+                local footballs = workspace:FindPartsInRegion3(region,nil,math.huge)
+                for _, football in ipairs(footballs) do
+                    if football.Name=="Football" and football:IsA("BasePart") then
+                        if (football.Position-hrp.Position).Magnitude < MAG_ESP_RADIUS then
+                            if not debounce then
+                                debounce = true
+                                local leftArm = player.Character:FindFirstChild("Left Arm") or player.Character:FindFirstChild("LeftHand")
+                                if leftArm then firetouchinterest(leftArm, football,0) task.wait() firetouchinterest(leftArm, football,1) end
+                                task.wait(0.2)
+                                debounce = false
+                            end
+                        end
+                    end
+                end
+            end)
+        else
+            if magConnection then magConnection:Disconnect() magConnection=nil end
+        end
+        -- ESP
+        if espEnabled then
+            for _, football in ipairs(workspace:GetDescendants()) do
+                if football:IsA("BasePart") and football.Name=="Football" then
+                    if not espBalls[football] then
+                        local sphere = Instance.new("SphereHandleAdornment")
+                        sphere.Adornee = football
+                        sphere.Radius = MAG_ESP_RADIUS
+                        sphere.Color3 = Color3.fromRGB(180,0,255)
+                        sphere.Transparency = 0.6
+                        sphere.AlwaysOnTop = true
+                        sphere.ZIndex = 5
+                        sphere.Parent = game.CoreGui
+                        espBalls[football]=sphere
+                        football.AncestryChanged:Connect(function(_,parent)
+                            if not parent and espBalls[football] then espBalls[football]:Destroy() espBalls[football]=nil end
+                        end)
+                    end
+                end
+            end
+            espConnection = RunService.RenderStepped:Connect(function()
+                for football,sphere in pairs(espBalls) do
+                    if not (football and football.Parent) then
+                        sphere:Destroy()
+                        espBalls[football]=nil
+                    else
+                        sphere.Radius=MAG_ESP_RADIUS
+                    end
+                end
+            end)
+        else
+            if espConnection then espConnection:Disconnect() espConnection=nil end
+            for _,sphere in pairs(espBalls) do sphere:Destroy() end
+            espBalls={}
+        end
+end})
