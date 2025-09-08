@@ -7,12 +7,44 @@ local UserInputService = game:GetService("UserInputService")
 local player = Players.LocalPlayer
 local camera = workspace.CurrentCamera
 
+-- Full Rayfield window with presets
 local Window = Rayfield:CreateWindow({
     Name = "DevoxHUB Paid",
-    Theme = "Light",
-    ToggleUIKeybind = "K"
+    Icon = 0,
+    LoadingTitle = "DevoxHUB Interface",
+    LoadingSubtitle = "Paid Version",
+    ShowText = "Devox",
+    Theme = "Light", -- Keep your preferred theme
+    ToggleUIKeybind = "K",
+
+    DisableRayfieldPrompts = false,
+    DisableBuildWarnings = false,
+
+    ConfigurationSaving = {
+        Enabled = true,
+        FolderName = "DevoxHUB",
+        FileName = "Config"
+    },
+
+    Discord = {
+        Enabled = false,
+        Invite = "noinvitelink",
+        RememberJoins = true
+    },
+
+    KeySystem = true,
+    KeySettings = {
+        Title = "DevoxHUB Paid",
+        Subtitle = "Enter Your Key",
+        Note = "Get your key from the Server!",
+        FileName = "DEVOXkey1",
+        SaveKey = true,
+        GrabKeyFromSite = false,
+        Key = {"DEVOXPAID901"} -- replace with your key
+    }
 })
 
+-- Startup sound
 do
     local sound = Instance.new("Sound")
     sound.SoundId = "rbxassetid://95080503984633"
@@ -21,27 +53,49 @@ do
     sound:Play()
 end
 
+-- Paid tab
 local PaidTab = Window:CreateTab("Paid",6034509999)
-PaidTab:CreateButton({Name="DEVOX HUB PAID",Callback=function()print("paid1")end})
-PaidTab:CreateButton({Name="THANKS FOR USING DEVOX",Callback=function()print("paid2")end})
+PaidTab:CreateButton({Name="DEVOX HUB PAID", Callback=function()print("paid1")end})
+PaidTab:CreateButton({Name="THANKS FOR USING DEVOX", Callback=function()print("paid2")end})
 
+-- Player tab
 local PlayerTab = Window:CreateTab("Player",4483362458)
-local WalkSpeedSlider = PlayerTab:CreateSlider({Name="Walk Speed",Range={16,200},Increment=1,Suffix="Speed",CurrentValue=16,Flag="WalkSpeed_Slider",Callback=function(v)if player.Character and player.Character:FindFirstChild("Humanoid")then player.Character.Humanoid.WalkSpeed=v end end})
+local WalkSpeedSlider = PlayerTab:CreateSlider({
+    Name="Walk Speed",
+    Range={16,200},
+    Increment=1,
+    Suffix="Speed",
+    CurrentValue=16,
+    Flag="WalkSpeed_Slider",
+    Callback=function(v)
+        if player.Character and player.Character:FindFirstChild("Humanoid") then
+            player.Character.Humanoid.WalkSpeed=v
+        end
+    end
+})
 local InfJumpEnabled=false
-PlayerTab:CreateToggle({Name="Infinite Jump",CurrentValue=false,Callback=function(v)InfJumpEnabled=v end})
-UserInputService.JumpRequest:Connect(function()if InfJumpEnabled and player.Character and player.Character:FindFirstChild("Humanoid")then player.Character.Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)end end)
+PlayerTab:CreateToggle({Name="Infinite Jump", CurrentValue=false, Callback=function(v)InfJumpEnabled=v end})
+UserInputService.JumpRequest:Connect(function()
+    if InfJumpEnabled and player.Character and player.Character:FindFirstChild("Humanoid") then
+        player.Character.Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+    end
+end)
 local FOVSlider = PlayerTab:CreateSlider({Name="FOV",Range={70,120},Increment=1,Suffix="°",CurrentValue=70,Callback=function(v)camera.FieldOfView=v end})
 local DashDistance=10
 PlayerTab:CreateSlider({Name="Dash Distance",Range={1,20},Increment=1,Suffix="studs",CurrentValue=DashDistance,Callback=function(v)DashDistance=v end})
-PlayerTab:CreateButton({Name="Dash",Callback=function()local hrp=player.Character and player.Character:FindFirstChild("HumanoidRootPart")if hrp then hrp.CFrame=hrp.CFrame+CFrame.new(hrp.CFrame.LookVector*DashDistance).Position end end})
+PlayerTab:CreateButton({Name="Dash",Callback=function()
+    local hrp=player.Character and player.Character:FindFirstChild("HumanoidRootPart")
+    if hrp then hrp.CFrame=hrp.CFrame+CFrame.new(hrp.CFrame.LookVector*DashDistance).Position end
+end})
 
+-- Magnet/ESP tab - **untouched from your original code**
 local MagnetTab = Window:CreateTab("MAGS+ESP",6034509999)
-local magsEnabled,espEnabled=false,false
-local debounce=false
-local magConnection,espConnection
-local espBalls={}
-local MAG_ESP_RADIUS=9
-local MagESPRadiusSlider=MagnetTab:CreateSlider({Name="MAGS+ESP Radius",Range={1,20},Increment=1,Suffix="studs",CurrentValue=MAG_ESP_RADIUS,Callback=function(v)MAG_ESP_RADIUS=v end})
+local magsEnabled, espEnabled = false, false
+local debounce = false
+local magConnection, espConnection
+local espBalls = {}
+local MAG_ESP_RADIUS = 9
+local MagESPRadiusSlider = MagnetTab:CreateSlider({Name="MAGS+ESP Radius",Range={1,20},Increment=1,Suffix="studs",CurrentValue=MAG_ESP_RADIUS,Callback=function(v)MAG_ESP_RADIUS=v end})
 MagnetTab:CreateToggle({Name="Enable MAGS+ESP",CurrentValue=false,Callback=function(v)
     magsEnabled=v
     espEnabled=v
