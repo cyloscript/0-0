@@ -13,9 +13,9 @@ local camera = workspace.CurrentCamera
 
 -- Window Config
 local WindowConfig = {
-    Name = "DevoxHUB",
+    Name = "DevoxHUB Paid",
     Icon = 93973861464448,
-    LoadingTitle = "DevoxHUB MS SCRIPT",
+    LoadingTitle = "DevoxHUB Paid",
     LoadingSubtitle = "by Cylo",
     ShowText = "Rayfield",
     Theme = "Light",
@@ -25,7 +25,7 @@ local WindowConfig = {
     ConfigurationSaving = { Enabled = true, FolderName = nil, FileName = "Big Hub" },
     Discord = { Enabled = true, Invite = "cEgVBaHcrz", RememberJoins = true },
     KeySystem = true,
-    KeySettings = { Title = "Devox Key", Subtitle = "Key System", Note = "KEY IN DISCORD", FileName = "DevoxKey", SaveKey = true, GrabKeyFromSite = false, Key = {"DEVOXHUB123"} }
+    KeySettings = { Title = "Devox Key", Subtitle = "Key System", Note = "KEY IN DISCORD", FileName = "DevoxKey", SaveKey = true, GrabKeyFromSite = false, Key = {"DEVOXPAID901"} }
 }
 
 -- Startup Sound
