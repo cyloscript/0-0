@@ -14,7 +14,7 @@ local Window = Rayfield:CreateWindow({
     LoadingTitle = "DevoxHUB Interface",
     LoadingSubtitle = "Paid Version",
     ShowText = "Devox",
-    Theme = "Light", -- Keep your preferred theme
+    Theme = "Light",
     ToggleUIKeybind = "K",
 
     DisableRayfieldPrompts = false,
@@ -40,7 +40,7 @@ local Window = Rayfield:CreateWindow({
         FileName = "DEVOXkey1",
         SaveKey = true,
         GrabKeyFromSite = false,
-        Key = {"DEVOXPAID901"} -- replace with your key
+        Key = {"DEVOXPAID901"}
     }
 })
 
@@ -88,55 +88,122 @@ PlayerTab:CreateButton({Name="Dash",Callback=function()
     if hrp then hrp.CFrame=hrp.CFrame+CFrame.new(hrp.CFrame.LookVector*DashDistance).Position end
 end})
 
--- Magnet/ESP tab - **untouched from your original code**
+-- Magnet/ESP tab (optimized)
 local MagnetTab = Window:CreateTab("MAGS+ESP",6034509999)
 local magsEnabled, espEnabled = false, false
 local debounce = false
 local magConnection, espConnection
 local espBalls = {}
 local MAG_ESP_RADIUS = 9
-local MagESPRadiusSlider = MagnetTab:CreateSlider({Name="MAGS+ESP Radius",Range={1,20},Increment=1,Suffix="studs",CurrentValue=MAG_ESP_RADIUS,Callback=function(v)MAG_ESP_RADIUS=v end})
-MagnetTab:CreateToggle({Name="Enable MAGS+ESP",CurrentValue=false,Callback=function(v)
-    magsEnabled=v
-    espEnabled=v
+
+local MagESPRadiusSlider = MagnetTab:CreateSlider({
+    Name="MAGS+ESP Radius",
+    Range={1,20},
+    Increment=1,
+    Suffix="studs",
+    CurrentValue=MAG_ESP_RADIUS,
+    Callback=function(v) MAG_ESP_RADIUS=v end
+})
+
+-- Helper: create ESP for a football
+local function createESP(ball)
+    if espBalls[ball] then return end
+    local s = Instance.new("SphereHandleAdornment")
+    s.Adornee = ball
+    s.Radius = MAG_ESP_RADIUS
+    s.Color3 = Color3.fromRGB(180,0,255)
+    s.Transparency = 0.6
+    s.AlwaysOnTop = true
+    s.ZIndex = 5
+    s.Parent = game.CoreGui
+    espBalls[ball] = s
+    ball.AncestryChanged:Connect(function(_,par)
+        if not par and espBalls[ball] then
+            espBalls[ball]:Destroy()
+            espBalls[ball] = nil
+        end
+    end)
+end
+
+-- Track footballs efficiently
+workspace.DescendantAdded:Connect(function(obj)
+    if obj:IsA("BasePart") and obj.Name=="Football" and espEnabled then
+        createESP(obj)
+    end
+end)
+
+local function toggleMagsESP(state)
+    magsEnabled = state
+    espEnabled = state
+
+    -- Magnet
     if magsEnabled then
-        magConnection=RunService.Heartbeat:Connect(function()
-            local hrp=player.Character and player.Character:FindFirstChild("HumanoidRootPart")
+        magConnection = RunService.Heartbeat:Connect(function()
+            local hrp = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
             if not hrp then return end
-            local region=Region3.new(hrp.Position-Vector3.new(MAG_ESP_RADIUS,MAG_ESP_RADIUS,MAG_ESP_RADIUS),hrp.Position+Vector3.new(MAG_ESP_RADIUS,MAG_ESP_RADIUS,MAG_ESP_RADIUS))
-            for _,p in ipairs(workspace:FindPartsInRegion3(region,nil,math.huge))do
+            local region = Region3.new(
+                hrp.Position - Vector3.new(MAG_ESP_RADIUS,MAG_ESP_RADIUS,MAG_ESP_RADIUS),
+                hrp.Position + Vector3.new(MAG_ESP_RADIUS,MAG_ESP_RADIUS,MAG_ESP_RADIUS)
+            )
+            for _, p in ipairs(workspace:FindPartsInRegion3(region,nil,math.huge)) do
                 if p.Name=="Football" and p:IsA("BasePart") and (p.Position-hrp.Position).Magnitude<MAG_ESP_RADIUS then
                     if not debounce then
-                        debounce=true
-                        local la=player.Character:FindFirstChild("Left Arm") or player.Character:FindFirstChild("LeftHand")
-                        if la then firetouchinterest(la,p,0) task.wait() firetouchinterest(la,p,1) end
+                        debounce = true
+                        local la = player.Character:FindFirstChild("Left Arm") or player.Character:FindFirstChild("LeftHand")
+                        if la then
+                            firetouchinterest(la,p,0) task.wait()
+                            firetouchinterest(la,p,1)
+                        end
                         task.wait(0.2)
-                        debounce=false
+                        debounce = false
                     end
                 end
             end
         end)
-    else if magConnection then magConnection:Disconnect() magConnection=nil end end
+    elseif magConnection then
+        magConnection:Disconnect()
+        magConnection = nil
+    end
 
+    -- ESP
     if espEnabled then
-        for _,p in ipairs(workspace:GetDescendants())do
-            if p:IsA("BasePart") and p.Name=="Football" and not espBalls[p] then
-                local s=Instance.new("SphereHandleAdornment")
-                s.Adornee=p
-                s.Radius=MAG_ESP_RADIUS
-                s.Color3=Color3.fromRGB(180,0,255)
-                s.Transparency=0.6
-                s.AlwaysOnTop=true
-                s.ZIndex=5
-                s.Parent=game.CoreGui
-                espBalls[p]=s
-                p.AncestryChanged:Connect(function(_,par)if not par and espBalls[p] then espBalls[p]:Destroy() espBalls[p]=nil end end)
+        -- Create ESP for all existing footballs
+        for _,ball in ipairs(workspace:GetDescendants()) do
+            if ball:IsA("BasePart") and ball.Name=="Football" then
+                createESP(ball)
             end
         end
-        espConnection=RunService.RenderStepped:Connect(function()
-            for p,s in pairs(espBalls)do
-                if not(p and p.Parent)then s:Destroy() espBalls[p]=nil else s.Radius=MAG_ESP_RADIUS end
+        -- Keep updating radius only (lightweight)
+        espConnection = RunService.RenderStepped:Connect(function()
+            for b,s in pairs(espBalls) do
+                if not (b and b.Parent) then
+                    s:Destroy()
+                    espBalls[b] = nil
+                else
+                    s.Radius = MAG_ESP_RADIUS
+                end
             end
         end)
-    else if espConnection then espConnection:Disconnect() espConnection=nil end for _,s in pairs(espBalls)do s:Destroy() end espBalls={} end
-end})
+    else
+        if espConnection then espConnection:Disconnect() espConnection=nil end
+        for _,s in pairs(espBalls) do s:Destroy() end
+        espBalls = {}
+    end
+end
+
+-- Create toggle in UI
+local MagsESPToggle = MagnetTab:CreateToggle({
+    Name="Enable MAGS+ESP",
+    CurrentValue=false,
+    Callback=toggleMagsESP
+})
+
+-- Keybind [M] syncs with UI toggle
+UserInputService.InputBegan:Connect(function(input,gp)
+    if gp then return end
+    if input.KeyCode == Enum.KeyCode.M then
+        local newState = not magsEnabled
+        MagsESPToggle:Set(newState) -- sync UI
+        toggleMagsESP(newState)
+    end
+end)
